@@ -96,22 +96,16 @@ defmodule Exleveldb do
   will not yield an error but simply return a list of all pairs in the datastore.
   """
   def stream(db_ref) do
-    {:ok, iter} = iterator db_ref
-    Stream.iterate(iterator_move(iter, :first), fn(_) ->
-      iterator_move iter, :next
-    end)
-    |> Stream.map(fn(item) ->
-      case item do
-        {:ok, k, v} -> {k,v}
-        {:error, _} -> {:error, :no_entry}
-      end
-    end)
-    |> Stream.take_while(fn(item) ->
-      case item do
-        {:error, _} -> false
-        _ -> true
-      end
-    end)
+    Stream.resource(
+      fn -> {iterator!(db_ref), :first} end,
+      fn {iterator_ref, status} ->
+        case iterator_move(iterator_ref, status) do
+          {:ok, key, value} -> {[{key, value}], {iterator_ref, :next}}
+          _ -> {:halt, {iterator_ref, :halted}}
+        end
+      end,
+      fn {iterator_ref, _} -> iterator_close(iterator_ref) end
+    )
   end
 
   @doc """
@@ -125,22 +119,16 @@ defmodule Exleveldb do
   will not yield an error but simply return a list of all pairs in the datastore.
   """
   def stream_keys(db_ref) do
-    {:ok, iter} = iterator db_ref, [], :keys_only
-    Stream.iterate(iterator_move(iter, :first), fn(_) ->
-      iterator_move iter, :next
-    end)
-    |> Stream.map(fn(item) ->
-      case item do
-        {:ok, key} -> key
-        {:error, _} -> {:error, :no_entry}
-      end
-    end)
-    |> Stream.take_while(fn(item) ->
-      case item do
-        {:error, _} -> false
-        _ -> true
-      end
-    end)
+    Stream.resource(
+      fn -> {iterator!(db_ref, [], :keys_only), :first} end,
+      fn {iterator_ref, status} ->
+        case iterator_move(iterator_ref, status) do
+          {:ok, key} -> {[key], {iterator_ref, :next}}
+          _ -> {:halt, {iterator_ref, :halted}}
+        end
+      end,
+      fn {iterator_ref, _} -> iterator_close(iterator_ref) end
+    )
   end
 
   @doc """
@@ -187,6 +175,19 @@ defmodule Exleveldb do
   """
   def iterator(db_ref, opts \\ []), do: :eleveldb.iterator(db_ref, opts)
   def iterator(db_ref, opts, :keys_only), do: :eleveldb.iterator(db_ref, opts, :keys_only)
+
+  @doc """
+  Same as `iterator/2` and `iterator/3` but returns the iterator on success and crashes
+  on errors.
+  """
+  def iterator!(db_ref, opts \\ []) do
+    {:ok, iter} = iterator(db_ref, opts)
+    iter
+  end
+  def iterator!(db_ref, opts, :keys_only) do
+    {:ok, iter} = iterator(db_ref, opts, :keys_only)
+    iter
+  end
 
   @doc """
   Takes an iterator reference and an action and returns the corresponding key-value pair.
