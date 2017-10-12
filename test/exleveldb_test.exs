@@ -24,11 +24,6 @@ defmodule ExleveldbTest do
     [db: mock_db(test_db_name), test_location: "#{db_dir()}/#{test_db_name}"]
   end
 
-  test "it's possible to open a new datastore", context do
-    assert context[:db] == "" # Opaque types suck for writing wrappers.
-    assert File.exists? context[:test_location]
-  end
-
   test "it's possible to put a key-value pair in the datastore", context do
     assert Exleveldb.put(context[:db], "test1", "test1 value") == :ok
     assert Exleveldb.put(context[:db], "test1", "test1 value") == :ok
