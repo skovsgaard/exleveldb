@@ -25,8 +25,8 @@ defmodule Exleveldb do
                            {:block_cache_threshold, pos_integer} |
                            {:delete_threshold, pos_integer} |
                            {:tiered_slow_level, pos_integer} |
-                           {:tiered_fast_prefix, char_list} |
-                           {:tiered_slow_prefix, char_list}]
+                           {:tiered_fast_prefix, charlist} |
+                           {:tiered_slow_prefix, charlist}]
   @type read_options   :: [{:verify_checksums, boolean} |
                            {:fill_cache, boolean} |
                            {:iterator_refresh, boolean}]
