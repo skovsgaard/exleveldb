@@ -42,7 +42,7 @@ defmodule Exleveldb.Mixfile do
 
   defp description do
     """
-    Exleveldb is a thin wrapper around Basho's eleveldb (github.com/basho/eleveldb).
+    Exleveldb is a thin wrapper around the Erlang module, eleveldb.
 
     At the moment, Exleveldb exposes functions for all features of LevelDB as well as an Elixir stream interface to Eleveldb's iterators.
     """
