@@ -2,15 +2,17 @@ defmodule Exleveldb.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :exleveldb,
-     version: "0.13.0",
-     elixir: "~> 1.6",
-     name: "Exleveldb",
-     source_url: "https://github.com/skovsgaard/exleveldb",
-     homepage_url: "https://hex.pm/packages/exleveldb",
-     description: description(),
-     package: package(),
-     deps: deps()]
+    [
+      app: :exleveldb,
+      version: "0.13.0",
+      elixir: "~> 1.6",
+      name: "Exleveldb",
+      source_url: "https://github.com/skovsgaard/exleveldb",
+      homepage_url: "https://hex.pm/packages/exleveldb",
+      description: description(),
+      package: package(),
+      deps: deps()
+    ]
   end
 
   # Configuration for the OTP application

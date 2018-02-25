@@ -1,39 +1,45 @@
 defmodule Exleveldb do
-  @type db_location    :: binary
-  @type db_reference   :: binary
-  @type itr_reference  :: binary
-  @type db_key         :: Atom | Bitstring
-  @type db_acc         :: any
-  @type open_options   :: [{:create_if_missing, boolean} |
-                           {:error_if_exists, boolean} |
-                           {:write_buffer_size, pos_integer} |
-                           {:block_size, pos_integer} |
-                           {:sst_block_size, pos_integer} |
-                           {:block_restart_interval, pos_integer} |
-                           {:block_size_steps, pos_integer} |
-                           {:paranoid_checks, boolean} |
-                           {:verify_compactions, boolean} |
-                           {:compression, boolean} |
-                           {:use_bloomfilter, boolean | pos_integer} |
-                           {:total_memory, pos_integer} |
-                           {:total_leveldb_mem, pos_integer} |
-                           {:total_leveldb_mem_percent, pos_integer} |
-                           {:is_internal_db, boolean} |
-                           {:limited_developer_mem, boolean} |
-                           {:eleveldb_threads, pos_integer} |
-                           {:fadvise_willneed, boolean} |
-                           {:block_cache_threshold, pos_integer} |
-                           {:delete_threshold, pos_integer} |
-                           {:tiered_slow_level, pos_integer} |
-                           {:tiered_fast_prefix, charlist} |
-                           {:tiered_slow_prefix, charlist}]
-  @type read_options   :: [{:verify_checksums, boolean} |
-                           {:fill_cache, boolean} |
-                           {:iterator_refresh, boolean}]
-  @type write_options  :: [{:sync, boolean}]
-  @type write_actions  :: [{:put, db_key, Bitstring} |
-                           {:delete, db_key} |
-                           :clear]
+  @type db_location :: binary
+  @type db_reference :: binary
+  @type itr_reference :: binary
+  @type db_key :: Atom | Bitstring
+  @type db_acc :: any
+  @type open_options :: [
+          {:create_if_missing, boolean}
+          | {:error_if_exists, boolean}
+          | {:write_buffer_size, pos_integer}
+          | {:block_size, pos_integer}
+          | {:sst_block_size, pos_integer}
+          | {:block_restart_interval, pos_integer}
+          | {:block_size_steps, pos_integer}
+          | {:paranoid_checks, boolean}
+          | {:verify_compactions, boolean}
+          | {:compression, boolean}
+          | {:use_bloomfilter, boolean | pos_integer}
+          | {:total_memory, pos_integer}
+          | {:total_leveldb_mem, pos_integer}
+          | {:total_leveldb_mem_percent, pos_integer}
+          | {:is_internal_db, boolean}
+          | {:limited_developer_mem, boolean}
+          | {:eleveldb_threads, pos_integer}
+          | {:fadvise_willneed, boolean}
+          | {:block_cache_threshold, pos_integer}
+          | {:delete_threshold, pos_integer}
+          | {:tiered_slow_level, pos_integer}
+          | {:tiered_fast_prefix, charlist}
+          | {:tiered_slow_prefix, charlist}
+        ]
+  @type read_options :: [
+          {:verify_checksums, boolean}
+          | {:fill_cache, boolean}
+          | {:iterator_refresh, boolean}
+        ]
+  @type write_options :: [{:sync, boolean}]
+  @type write_actions :: [
+          {:put, db_key, Bitstring}
+          | {:delete, db_key}
+          | :clear
+        ]
 
   alias Exleveldb.Keys
   alias Exleveldb.Values
@@ -47,14 +53,14 @@ defmodule Exleveldb do
   Takes a `name` string and an `opts` list and opens a new datastore in the 
   directory called `name`. If `name` does not exist already and no `opts` list
   was provided, `opts` will default to `[{:create_if_missing, :true}]`.
-  
+
   Returns `{:ok, ""}` where what appears to be an empty binary is a reference to the opened
   datastore or, on error, `{:error, {:type, 'reason for error'}}`.
   """
   @spec open(db_location, open_options) :: {:ok, db_reference} | {:error, any}
   def open(name, opts \\ [create_if_missing: true]) do
     name
-    |> :binary.bin_to_list
+    |> :binary.bin_to_list()
     |> :eleveldb.open(opts)
   end
 
@@ -89,7 +95,7 @@ defmodule Exleveldb do
   @doc """
   Takes a reference as returned by `open/2`, a key and an options list and
   deletes the value associated with `key` in the datastore, `db_ref`.
-  
+
   Returns `:ok` when successful or `{:error, reference, {:type, action}}` on error.
   """
   @spec delete(db_reference, db_key, write_options) :: :ok | {:error, any}
@@ -100,7 +106,7 @@ defmodule Exleveldb do
   @doc """
   Takes a reference as returned by `open/2` and checks whether the datastore
   specified by `db_ref` is empty.
-  
+
   Returns `true` if empty and `false` if not.
   """
   @spec is_empty?(db_reference) :: true | false
@@ -117,7 +123,7 @@ defmodule Exleveldb do
   i.e. key-value pair, in the list.
   """
   @spec map(db_reference, Fun) :: List
-  def map(db_ref, fun), do: fold(db_ref, fn(pair, acc) -> acc ++ [fun.(pair)] end, [])
+  def map(db_ref, fun), do: fold(db_ref, fn pair, acc -> acc ++ [fun.(pair)] end, [])
 
   @doc """
   Takes a reference as returned by `open/2` and an anonymous function,
@@ -130,7 +136,7 @@ defmodule Exleveldb do
   i..e key, in the list.
   """
   @spec map_keys(db_reference, Fun) :: List
-  def map_keys(db_ref, fun), do: fold_keys(db_ref, fn(key, acc) -> acc ++ [fun.(key)] end, [])
+  def map_keys(db_ref, fun), do: fold_keys(db_ref, fn key, acc -> acc ++ [fun.(key)] end, [])
 
   @doc """
   Takes a reference as returned by `open/2`,
@@ -144,46 +150,48 @@ defmodule Exleveldb do
   specifying more entries than are in the referenced datastore
   will not yield an error but simply return a list of all pairs in the datastore.
   """
-  @spec stream(db_reference) :: Enumerable.t
+  @spec stream(db_reference) :: Enumerable.t()
   def stream(db_ref) do
     Stream.resource(
-    fn ->
-      {:ok, iter} = iterator(db_ref)
-      {:first, iter}
-    end,
-    fn {state, iter} ->
-      case iterator_move(iter, state) do
-        {:ok, k, v} -> {[{k,v}], {:next, iter}}
-        _ -> {:halt, {state, iter}}
+      fn ->
+        {:ok, iter} = iterator(db_ref)
+        {:first, iter}
+      end,
+      fn {state, iter} ->
+        case iterator_move(iter, state) do
+          {:ok, k, v} -> {[{k, v}], {:next, iter}}
+          _ -> {:halt, {state, iter}}
+        end
+      end,
+      fn {_, iter} ->
+        iterator_close(iter)
       end
-    end,
-    fn {_, iter} ->
-      iterator_close(iter)
-    end)
+    )
   end
 
   def stream(db_ref, :keys_only) do
     Stream.resource(
-    fn ->
-      {:ok, iter} = iterator(db_ref, [], :keys_only)
-      {:first, iter}
-    end,
-    fn {state, iter} ->
-      case iterator_move(iter, state) do
-        {:ok, k} -> {[k], {:next, iter}}
-        _ -> {:halt, {state, iter}}
+      fn ->
+        {:ok, iter} = iterator(db_ref, [], :keys_only)
+        {:first, iter}
+      end,
+      fn {state, iter} ->
+        case iterator_move(iter, state) do
+          {:ok, k} -> {[k], {:next, iter}}
+          _ -> {:halt, {state, iter}}
+        end
+      end,
+      fn {_, iter} ->
+        iterator_close(iter)
       end
-    end,
-    fn {_, iter} ->
-      iterator_close(iter)
-    end)
+    )
   end
 
   @doc """
   Takes a reference as returned by `open/2`, an anonymous function,
   an accumulator, and an options list and folds over the key-value pairs
   in the datastore specified in `db_ref`.
-  
+
   Returns the result of the last call to the anonymous function used in the fold.
 
   The two arguments passed to the anonymous function, `fun` are a tuple of the
@@ -215,12 +223,14 @@ defmodule Exleveldb do
   """
   @spec write(db_reference, write_actions, write_options) :: :ok | {:error, any}
   def write(db_ref, updates, opts \\ []) do
-    prepped_updates = Enum.map(updates, fn update ->
-      case update do
-        {:put, k, v} -> {:put, Keys.to_key(k), Values.to_value(v)}
-        {:delete, k} -> {:delete, Keys.to_key(k)}
-      end
-    end)
+    prepped_updates =
+      Enum.map(updates, fn update ->
+        case update do
+          {:put, k, v} -> {:put, Keys.to_key(k), Values.to_value(v)}
+          {:delete, k} -> {:delete, Keys.to_key(k)}
+        end
+      end)
+
     :eleveldb.write(db_ref, prepped_updates, opts)
   end
 
@@ -259,18 +269,19 @@ defmodule Exleveldb do
   @spec destroy(db_location, open_options) :: :ok | {:error, any}
   def destroy(path, opts \\ []) do
     path
-    |> :binary.bin_to_list
+    |> :binary.bin_to_list()
     |> :eleveldb.destroy(opts)
   end
+
   @doc """
   Takes the path to the leveldb database and a list of options. The standard recomended option is the empty list `[]`.
   Before calling `repair/2`, close the connection to the database with `close/1`.
   Returns `:ok` on success and `{:error, reason}` on error.
   """
   @spec repair(db_location, open_options) :: :ok | {:error, any}
-  def repair(path,opts \\ []) do 	
+  def repair(path, opts \\ []) do
     path
-    |> :binary.bin_to_list
+    |> :binary.bin_to_list()
     |> :eleveldb.repair(opts)
   end
 end

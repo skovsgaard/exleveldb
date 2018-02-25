@@ -7,11 +7,11 @@ defprotocol Exleveldb.Keys do
 end
 
 defimpl Exleveldb.Keys, for: Integer do
-  def to_key(number), do: Integer.to_string number
+  def to_key(number), do: Integer.to_string(number)
 end
 
 defimpl Exleveldb.Keys, for: Atom do
-  def to_key(atom), do: Atom.to_string atom
+  def to_key(atom), do: Atom.to_string(atom)
 end
 
 defimpl Exleveldb.Keys, for: List do
