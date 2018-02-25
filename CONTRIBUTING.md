@@ -23,7 +23,9 @@ Then, you should be ready to get to work.
 
 ## Style
 
-Luckily, [a great style guide for Elixir](https://github.com/niftyn8/elixir_style_guide) already exists, so if you just follow that, you should be fine.
+~~Luckily, [a great style guide for Elixir](https://github.com/niftyn8/elixir_style_guide) already exists, so if you just follow that, you should be fine.~~
+
+Luckily, as of Elixir 1.6, the style guide is no longer needed. Simply run `mix format mix.exs "lib/**/*.{ex,exs}" "test/**/*.{ex,exs}"` before pushing any changes and you automagically follow the same style as this project.
 
 ## Before you commit
 
