@@ -45,7 +45,7 @@ defmodule Exleveldb do
   alias Exleveldb.Values
 
   @moduledoc """
-  Exleveldb is a thin wrapper around [Basho's eleveldb](https://github.com/basho/eleveldb).
+  Exleveldb is a thin wrapper around the Erlang module, eleveldb.
   At the moment, Exleveldb exposes the functions defined in this module.
   """
 
