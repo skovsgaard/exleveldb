@@ -4,8 +4,8 @@ defmodule Exleveldb.Mixfile do
   def project do
     [
       app: :exleveldb,
-      version: "0.13.1",
-      elixir: "~> 1.6",
+      version: "0.14.0",
+      elixir: "~> 1.7",
       name: "Exleveldb",
       source_url: "https://github.com/skovsgaard/exleveldb",
       homepage_url: "https://hex.pm/packages/exleveldb",
@@ -35,7 +35,7 @@ defmodule Exleveldb.Mixfile do
     [
       {:eleveldb, "~> 2.2.20"},
       {:earmark, "~> 1.2", only: :dev},
-      {:ex_doc, "~> 0.18", only: :dev},
+      {:ex_doc, "~> 0.19", only: :dev},
       {:dialyxir, "~> 0.5", only: :dev}
     ]
   end
